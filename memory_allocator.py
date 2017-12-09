@@ -33,18 +33,31 @@ class MemoryAllocator:
 
     def best_fit_allocate(self, processID, memory_size, memory_map):
 
+        # investigate - acts like a circular array?
+
         allocate_at = -1
         # format: index, size
         available_memory_sizes = []
 
         for key, value in self.empty_blocks.items():
+            print('val 0:', value[0], 'val 1:', value[1])
+#            print('val 1:', value[1])
             if value[0] == 0 and value[1] >= memory_size:
                 available_memory_sizes.append((key, value[1]))
+
+        print(available_memory_sizes)
 
         # find candidate closest to requested size
         if(len(available_memory_sizes) != 0):
             # problem - cannot be <memory_size
             allocate_at = min(range(len(available_memory_sizes)), key=lambda i: abs(available_memory_sizes[i][1]-memory_size))
+
+        # uh oh- edge case of -1
+        print('allocate at:', allocate_at)
+        print('up to:', allocate_at+memory_size)
+
+        if allocate_at == -1:
+            return -1
 
         for i in range(allocate_at, allocate_at+memory_size):
             memory_map[i] = processID
@@ -118,7 +131,7 @@ class MemoryAllocator:
             if elem == processID:
                 memory_map[index] = 0
 
-        self.update_empty_blocks(0)
+        self.empty_blocks = self.update_empty_blocks(0)
 
 
 if __name__ == '__main__':
@@ -126,18 +139,16 @@ if __name__ == '__main__':
     memory_map = [0, 0, 2, 2, 0, 0, 0, 0, 3, 3, 3, 0, 0, 4, 0]
     empty_blocks = {}
     MA = MemoryAllocator(memory_map)
-    print(MA.memory_map)
-    print(MA.empty_blocks)
+    print('Initial map:', MA.memory_map)
     MA.first_fit_allocate(7, 3, MA.memory_map)
-    print(MA.memory_map)
-    print(MA.empty_blocks)
+    print('First fit allocate', MA.memory_map)
 
     MA.releaseMemory(7)
-    print(MA.memory_map)
+    print('Release memory:', MA.memory_map)
 
     # PROBLEM: overwrites existing nonzero values :(
     MA.best_fit_allocate(7, 3, MA.memory_map)
-    print(MA.memory_map)
+    print('Best fit allocate', MA.memory_map)
 
     MA.releaseMemory(7)
     print('Release memory:', MA.memory_map)
