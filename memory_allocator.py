@@ -42,7 +42,14 @@ class MemoryAllocator:
                 available_memory_sizes.append((key, value[1]))
 
         # find candidate closest to requested size
-        for(
+        if(len(available_memory_sizes) != 0):
+            allocate_at = min(range(len(available_memory_sizes)), key=lambda i: abs(available_memory_sizes-memory_size))
+
+        print('memory size:', memory_size)
+        print('allocate at:', allocate_at)
+
+        for i in range(allocate_at, allocate_at+memory_size):
+            memory_map[i] = processID
 
         self.empty_blocks = self.update_empty_blocks(allocate_at)
 
@@ -70,7 +77,44 @@ class MemoryAllocator:
 
         last_block_allocated = allocate_at
         return allocate_at
-                
+
+    def worst_fit_allocate(self, processID, memory_size, memory_map):
+        allocate_at = -1
+        available_memory_sizes = {}
+
+        for key, value in self.empty_blocks.items():
+            if value[0] == 0:
+                available_memory_sizes[key] = value[1]
+
+        # find candidate with largest block
+        for key, value in available_memory_sizes.items():
+            if value > allocate_at:
+                allocate_at = value
+
+        for i in range(allocate_at, allocate_at+memory_size):
+            memory_map[i] = processID
+
+        self.empty_blocks = self.update_empty_blocks(allocate_at)
+
+        last_block_allocated = allocate_at
+        return allocate_at
+
+    def next_fit_allocate(self, processID, memory_size, memory_map, last_block_allocated):
+        allocate_at = -1
+
+        # start search from the last block allocated
+        for key, value in empty_blocks:
+            if key > lastBlockAllocated and value[0] == 0 and value[1] >= memory_size:
+                allocate_at = key
+
+        for i in range(allocate_at, allocate_at+memory_size):
+            memory_map[i] = processID
+
+        self.empty_blocks = self.update_empty_blocks(allocate_at)
+        last_block_allocated = allocate_at
+
+        return allocate_at
+               
     def releaseMemory(self, processID):
         for index, elem in enumerate(self.memory_list):
             if elem == processID:
