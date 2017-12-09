@@ -27,7 +27,6 @@ class MemoryAllocator:
         for index, val in enumerate(grouped_values):
             vals_with_index[absolute_index] = grouped_values[index]
             absolute_index += grouped_values[index][1]
-            print(absolute_index)
 
         return vals_with_index
 
@@ -35,18 +34,17 @@ class MemoryAllocator:
     def best_fit_allocate(self, processID, memory_size, memory_map):
 
         allocate_at = -1
+        # format: index, size
         available_memory_sizes = []
 
         for key, value in self.empty_blocks.items():
-            if value[0] == 0:
+            if value[0] == 0 and value[1] >= memory_size:
                 available_memory_sizes.append((key, value[1]))
 
         # find candidate closest to requested size
         if(len(available_memory_sizes) != 0):
-            allocate_at = min(range(len(available_memory_sizes)), key=lambda i: abs(available_memory_sizes-memory_size))
-
-        print('memory size:', memory_size)
-        print('allocate at:', allocate_at)
+            # problem - cannot be <memory_size
+            allocate_at = min(range(len(available_memory_sizes)), key=lambda i: abs(available_memory_sizes[i][1]-memory_size))
 
         for i in range(allocate_at, allocate_at+memory_size):
             memory_map[i] = processID
@@ -116,9 +114,9 @@ class MemoryAllocator:
         return allocate_at
                
     def releaseMemory(self, processID):
-        for index, elem in enumerate(self.memory_list):
+        for index, elem in enumerate(self.memory_map):
             if elem == processID:
-                memory_list[index] = 0
+                memory_map[index] = 0
 
         self.update_empty_blocks(0)
 
@@ -133,5 +131,22 @@ if __name__ == '__main__':
     MA.first_fit_allocate(7, 3, MA.memory_map)
     print(MA.memory_map)
     print(MA.empty_blocks)
-#    empty_blocks = update_empty_blocks(memory_map, empty_blocks, 0)
-#    print(empty_blocks)
+
+    MA.releaseMemory(7)
+    print(MA.memory_map)
+
+    # PROBLEM: overwrites existing nonzero values :(
+    MA.best_fit_allocate(7, 3, MA.memory_map)
+    print(MA.memory_map)
+
+    MA.releaseMemory(7)
+    print('Release memory:', MA.memory_map)
+
+    MA.next_fit_allocate(7, 3, MA.memory_map, MA.last_block_allocated)
+    print(MA.memory_map)
+
+    MA.releaseMemory(7)
+    print(MA.memory_map)
+
+    MA.worst_fit_allocate(7, 3, MA.memory_map)
+    print(MA.memory_map)
