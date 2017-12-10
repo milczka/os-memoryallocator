@@ -109,9 +109,12 @@ class MemoryAllocator:
         allocate_at = -1
 
         # start search from the last block allocated
-        for key, value in empty_blocks:
-            if key > lastBlockAllocated and value[0] == 0 and value[1] >= memory_size:
+        for key, value in self.empty_blocks.items():
+            if key > last_block_allocated and value[0] == 0 and value[1] >= memory_size:
                 allocate_at = key
+
+        if allocate_at == -1:
+            return -1
 
         for i in range(allocate_at, allocate_at+memory_size):
             memory_map[i] = processID
@@ -130,9 +133,7 @@ class MemoryAllocator:
 
 
 if __name__ == '__main__':
-    index = 0
     memory_map = [0, 0, 2, 2, 0, 0, 0, 0, 3, 3, 3, 0, 0, 4, 0]
-    empty_blocks = {}
     MA = MemoryAllocator(memory_map)
     print('Initial map:', MA.memory_map)
     MA.first_fit_allocate(7, 3, MA.memory_map)
@@ -148,10 +149,10 @@ if __name__ == '__main__':
     print('Release memory:', MA.memory_map)
 
     MA.next_fit_allocate(7, 3, MA.memory_map, MA.last_block_allocated)
-    print(MA.memory_map)
+    print('Next fit:', MA.memory_map)
 
     MA.releaseMemory(7)
-    print(MA.memory_map)
+    print('Release:', MA.memory_map)
 
     MA.worst_fit_allocate(7, 3, MA.memory_map)
-    print(MA.memory_map)
+    print('Worst fit:', MA.memory_map)
