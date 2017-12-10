@@ -40,21 +40,16 @@ class MemoryAllocator:
         available_memory_sizes = []
 
         for key, value in self.empty_blocks.items():
-            print('val 0:', value[0], 'val 1:', value[1])
-#            print('val 1:', value[1])
             if value[0] == 0 and value[1] >= memory_size:
                 available_memory_sizes.append((key, value[1]))
 
-        print(available_memory_sizes)
-
         # find candidate closest to requested size
         if(len(available_memory_sizes) != 0):
-            # problem - cannot be <memory_size
-            allocate_at = min(range(len(available_memory_sizes)), key=lambda i: abs(available_memory_sizes[i][1]-memory_size))
-
-        # uh oh- edge case of -1
-        print('allocate at:', allocate_at)
-        print('up to:', allocate_at+memory_size)
+            difference = -1
+            for index, elem in enumerate(available_memory_sizes):
+                if abs(memory_size-elem[1]) > difference:
+                    difference = memory_size-elem[1]
+                    allocate_at = elem[0]
 
         if allocate_at == -1:
             return -1
@@ -146,7 +141,6 @@ if __name__ == '__main__':
     MA.releaseMemory(7)
     print('Release memory:', MA.memory_map)
 
-    # PROBLEM: overwrites existing nonzero values :(
     MA.best_fit_allocate(7, 3, MA.memory_map)
     print('Best fit allocate', MA.memory_map)
 
