@@ -30,9 +30,15 @@ class MemoryAllocator:
 
         return vals_with_index
 
+    # helper function
+    def validate_input(self, requested_memory_size):
+        if requested_memory_size > len(self.memory_map):
+            raise Exception('Requested memory larger than memory map')
+
 
     def best_fit_allocate(self, processID, memory_size, memory_map):
 
+        self.validate_input(memory_size)
         allocate_at = -1
         # format: index, size
         available_memory_sizes = []
@@ -62,9 +68,7 @@ class MemoryAllocator:
 
     def first_fit_allocate(self, processID, memory_size, memory_map):
 
-        if memory_size > len(memory_map):
-            raise Exception('Requested memory larger than memory map')
-
+        self.validate_input(memory_size)
         allocate_at = -1
         if self.last_block_allocated == -1:
             self.last_block_allocated = 0
@@ -86,18 +90,16 @@ class MemoryAllocator:
         return allocate_at
 
     def worst_fit_allocate(self, processID, memory_size, memory_map):
+
+        self.validate_input(memory_size)
         allocate_at = -1
 
         for key, value in self.empty_blocks.items():
-            print('key value', key, value)
-            print(type(value))
             if value[0] == 0:# and value[1] > allocate_at:
                 allocate_at = key
-                print(allocate_at)
 
         for i in range(allocate_at, allocate_at+memory_size):
             if i < len(memory_map):
-                print(i)
                 memory_map[i] = processID
 
         self.empty_blocks = self.update_empty_blocks(allocate_at)
@@ -106,6 +108,8 @@ class MemoryAllocator:
         return allocate_at
 
     def next_fit_allocate(self, processID, memory_size, memory_map, last_block_allocated):
+
+        self.validate_input(memory_size)
         allocate_at = -1
 
         # start search from the last block allocated
@@ -140,27 +144,20 @@ if __name__ == '__main__':
     print('Initial map:', MA.memory_map)
     MA.first_fit_allocate(7, 3, MA.memory_map)
     print('First fit:', MA.memory_map)
-
     MA.releaseMemory(7)
     print('Release memory:', MA.memory_map)
-
     MA.best_fit_allocate(7, 3, MA.memory_map)
     print('Best fit:', MA.memory_map)
-
     MA.releaseMemory(7)
     print('Release memory:', MA.memory_map)
-
     MA.next_fit_allocate(7, 3, MA.memory_map, MA.last_block_allocated)
     print('Next fit:', MA.memory_map)
-
     MA.releaseMemory(7)
     print('Release:', MA.memory_map)
-
     MA.worst_fit_allocate(7, 3, MA.memory_map)
     print('Worst fit:', MA.memory_map)
 
-    print('-------------------------------------------------')
-    print('\n')
+    print('-------------------------------------------------\n')
 
     memory_map1 = [0, 0, 0, 5, 5, 5, 0, 0, 6, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22]
     MA1 = MemoryAllocator(memory_map1)
@@ -174,3 +171,18 @@ if __name__ == '__main__':
     print('Worst fit:', MA1.memory_map)
     MA1.first_fit_allocate(42, 3, MA1.memory_map)
     print('First fit:', MA1.memory_map)
+
+    print('------------------------------------------------\n')
+
+    memory_map2 = [0] * 20
+    MA2 = MemoryAllocator(memory_map2)
+
+    print('Initial map:', MA2.memory_map)
+    MA2.first_fit_allocate(11, 5, MA2.memory_map)
+    print('First fit:', MA2.memory_map)
+    MA2.worst_fit_allocate(22, 3, MA2.memory_map)
+    print('Worst fit:', MA2.memory_map)
+    MA2.best_fit_allocate(33, 2, MA2.memory_map)
+    print('Best fit:', MA2.memory_map)
+    MA2.next_fit_allocate(44, 5, MA2.memory_map, MA2.last_block_allocated)
+    print('Next fit:', MA2.memory_map)
