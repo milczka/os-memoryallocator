@@ -72,6 +72,8 @@ class MemoryAllocator:
         for key, value in self.empty_blocks.items():
             if value[0] == 0 and value[1] >= memory_size:
                 allocate_at = key
+                # stop after first initialization
+                break
 
         # populate map with processID
         for i in range(allocate_at, allocate_at+memory_size):
@@ -85,19 +87,18 @@ class MemoryAllocator:
 
     def worst_fit_allocate(self, processID, memory_size, memory_map):
         allocate_at = -1
-        available_memory_sizes = {}
 
         for key, value in self.empty_blocks.items():
-            if value[0] == 0:
-                available_memory_sizes[key] = value[1]
-
-        # find candidate with largest block
-        for key, value in available_memory_sizes.items():
-            if value > allocate_at:
-                allocate_at = value
+            print('key value', key, value)
+            print(type(value))
+            if value[0] == 0:# and value[1] > allocate_at:
+                allocate_at = key
+                print(allocate_at)
 
         for i in range(allocate_at, allocate_at+memory_size):
-            memory_map[i] = processID
+            if i < len(memory_map):
+                print(i)
+                memory_map[i] = processID
 
         self.empty_blocks = self.update_empty_blocks(allocate_at)
         self.last_block_allocated = allocate_at
@@ -108,9 +109,7 @@ class MemoryAllocator:
         allocate_at = -1
 
         # start search from the last block allocated
-        print('last block allocated:', last_block_allocated)
         for key, value in self.empty_blocks.items():
-            print('key val', key, value)
             if key > last_block_allocated and value[0] == 0 and value[1] >= memory_size:
                 allocate_at = key
                 # stop at first initialization
@@ -119,7 +118,6 @@ class MemoryAllocator:
         if allocate_at == -1:
             return -1
 
-        print('allocate at:', allocate_at)
         for i in range(allocate_at, allocate_at+memory_size):
             memory_map[i] = processID
 
@@ -141,13 +139,13 @@ if __name__ == '__main__':
     MA = MemoryAllocator(memory_map)
     print('Initial map:', MA.memory_map)
     MA.first_fit_allocate(7, 3, MA.memory_map)
-    print('First fit allocate', MA.memory_map)
+    print('First fit:', MA.memory_map)
 
     MA.releaseMemory(7)
     print('Release memory:', MA.memory_map)
 
     MA.best_fit_allocate(7, 3, MA.memory_map)
-    print('Best fit allocate', MA.memory_map)
+    print('Best fit:', MA.memory_map)
 
     MA.releaseMemory(7)
     print('Release memory:', MA.memory_map)
@@ -161,7 +159,8 @@ if __name__ == '__main__':
     MA.worst_fit_allocate(7, 3, MA.memory_map)
     print('Worst fit:', MA.memory_map)
 
-    print('---------------------------------------')
+    print('-------------------------------------------------')
+    print('\n')
 
     memory_map1 = [0, 0, 0, 5, 5, 5, 0, 0, 6, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22]
     MA1 = MemoryAllocator(memory_map1)
@@ -171,3 +170,7 @@ if __name__ == '__main__':
     print('Best fit:', MA1.memory_map)
     MA1.next_fit_allocate(18, 3, MA1.memory_map, MA1.last_block_allocated)
     print('Next fit:', MA1.memory_map)
+    MA1.worst_fit_allocate(3, 1, MA1.memory_map)
+    print('Worst fit:', MA1.memory_map)
+    MA1.first_fit_allocate(42, 3, MA1.memory_map)
+    print('First fit:', MA1.memory_map)
