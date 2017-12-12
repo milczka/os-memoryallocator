@@ -21,7 +21,7 @@ class MemoryAllocator:
 
     # helper function
     def update_empty_blocks(self, search_index):
-        grouped_values = [(k, sum(1 for i in g)) for k,g in groupby(memory_map)]
+        grouped_values = [(k, sum(1 for i in g)) for k,g in groupby(self.memory_map)]
         vals_with_index = {}
         absolute_index = 0
         for index, val in enumerate(grouped_values):
@@ -33,8 +33,6 @@ class MemoryAllocator:
 
     def best_fit_allocate(self, processID, memory_size, memory_map):
 
-        # investigate - acts like a circular array?
-
         allocate_at = -1
         # format: index, size
         available_memory_sizes = []
@@ -45,10 +43,10 @@ class MemoryAllocator:
 
         # find candidate closest to requested size
         if(len(available_memory_sizes) != 0):
-            difference = -1
+            difference = 10000
             for index, elem in enumerate(available_memory_sizes):
-                if abs(memory_size-elem[1]) > difference:
-                    difference = memory_size-elem[1]
+                if abs(memory_size-elem[1]) < difference:
+                    difference = abs(memory_size-elem[1])
                     allocate_at = elem[0]
 
         if allocate_at == -1:
@@ -58,6 +56,7 @@ class MemoryAllocator:
             memory_map[i] = processID
 
         self.empty_blocks = self.update_empty_blocks(allocate_at)
+        self.last_block_allocated = allocate_at
 
         return allocate_at
 
@@ -80,8 +79,8 @@ class MemoryAllocator:
 
         # update empty blocks
         self.empty_blocks = self.update_empty_blocks(allocate_at)
+        self.last_block_allocated = allocate_at
 
-        last_block_allocated = allocate_at
         return allocate_at
 
     def worst_fit_allocate(self, processID, memory_size, memory_map):
@@ -101,26 +100,31 @@ class MemoryAllocator:
             memory_map[i] = processID
 
         self.empty_blocks = self.update_empty_blocks(allocate_at)
+        self.last_block_allocated = allocate_at
 
-        last_block_allocated = allocate_at
         return allocate_at
 
     def next_fit_allocate(self, processID, memory_size, memory_map, last_block_allocated):
         allocate_at = -1
 
         # start search from the last block allocated
+        print('last block allocated:', last_block_allocated)
         for key, value in self.empty_blocks.items():
+            print('key val', key, value)
             if key > last_block_allocated and value[0] == 0 and value[1] >= memory_size:
                 allocate_at = key
+                # stop at first initialization
+                break
 
         if allocate_at == -1:
             return -1
 
+        print('allocate at:', allocate_at)
         for i in range(allocate_at, allocate_at+memory_size):
             memory_map[i] = processID
 
         self.empty_blocks = self.update_empty_blocks(allocate_at)
-        last_block_allocated = allocate_at
+        self.last_block_allocated = allocate_at
 
         return allocate_at
                
@@ -156,3 +160,14 @@ if __name__ == '__main__':
 
     MA.worst_fit_allocate(7, 3, MA.memory_map)
     print('Worst fit:', MA.memory_map)
+
+    print('---------------------------------------')
+
+    memory_map1 = [0, 0, 0, 5, 5, 5, 0, 0, 6, 0, 0, 0, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22]
+    MA1 = MemoryAllocator(memory_map1)
+
+    print('Initial map:', MA1.memory_map)
+    MA1.best_fit_allocate(17, 2, MA1.memory_map)
+    print('Best fit:', MA1.memory_map)
+    MA1.next_fit_allocate(18, 3, MA1.memory_map, MA1.last_block_allocated)
+    print('Next fit:', MA1.memory_map)
